@@ -15,13 +15,15 @@
  */
 package nl.knaw.dans.wf.vaultmd
 
-import nl.knaw.dans.lib.dataverse.model.dataset.{ CompoundField, ControlledSingleValueField, MetadataField, PrimitiveMultipleValueField, PrimitiveSingleValueField }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ CompoundField, ControlledSingleValueField, MetadataBlock, MetadataField, PrimitiveMultiValueField, PrimitiveSingleValueField }
 import org.json4s.{ CustomSerializer, DefaultFormats, Extraction, Formats, JNull, JObject }
 
+import java.util
 import scala.collection.mutable
+import collection.JavaConverters._
 
 package object legacy {
-  implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
+  implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer + MetadataBlockSerializer
 
 
 
@@ -33,15 +35,19 @@ package object legacy {
 
   type JsonObject = Map[String, MetadataField]
 
+  case class MetadataBlockScala(displayName: String, name: String, fields: List[MetadataField]) extends MetadataBlock {
+    override def getFields: util.List[MetadataField] = { fields.asJava }
+  }
+
   case class FieldMap() {
     private val fields = mutable.Map[String, MetadataField]()
 
     def addPrimitiveField(name: String, value: String): Unit = {
-      fields.put(name, PrimitiveSingleValueField(name, value))
+      fields.put(name, new PrimitiveSingleValueField(name, value))
     }
 
     def addCvField(name: String, value: String): Unit = {
-      fields.put(name, ControlledSingleValueField(name, value))
+      fields.put(name, new ControlledSingleValueField(name, value))
     }
 
     def toJsonObject: JsonObject = fields.toMap
@@ -54,11 +60,19 @@ package object legacy {
 
       typeClass match {
         case "primitive" if !multiple => Extraction.extract[PrimitiveSingleValueField](jsonObj)
-        case "primitive" => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
+        case "primitive" => Extraction.extract[PrimitiveMultiValueField](jsonObj)
         case "controlledVocabulary" if !multiple => Extraction.extract[PrimitiveSingleValueField](jsonObj)
-        case "controlledVocabulary" => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
+        case "controlledVocabulary" => Extraction.extract[PrimitiveMultiValueField](jsonObj)
         case "compound" => Extraction.extract[CompoundField](jsonObj)
       }
+  }, {
+    case null => JNull
+  }
+  ))
+
+  object MetadataBlockSerializer extends CustomSerializer[MetadataBlock](format => ( {
+    case jsonObj: JObject =>
+      Extraction.extract[MetadataBlockScala](jsonObj)
   }, {
     case null => JNull
   }

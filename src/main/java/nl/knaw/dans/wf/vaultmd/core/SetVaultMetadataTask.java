@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.wf.vaultmd.core;
 
-import nl.knaw.dans.lib.dataverse.DataverseInstance;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
 import nl.knaw.dans.wf.vaultmd.legacy.SetVaultMetadataTaskScala;
 import nl.knaw.dans.wf.vaultmd.legacy.WorkflowVariables;
@@ -26,9 +26,9 @@ public class SetVaultMetadataTask implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(SetVaultMetadataTask.class);
     private final StepInvocation stepInvocation;
-    private final DataverseInstance dataverseClient;
+    private final DataverseClient dataverseClient;
 
-    public SetVaultMetadataTask(StepInvocation stepInvocation, DataverseInstance dataverseClient) {
+    public SetVaultMetadataTask(StepInvocation stepInvocation, DataverseClient dataverseClient) {
         this.stepInvocation = stepInvocation;
         this.dataverseClient = dataverseClient;
     }

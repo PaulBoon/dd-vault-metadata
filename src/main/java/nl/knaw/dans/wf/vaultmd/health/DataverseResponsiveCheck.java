@@ -17,25 +17,29 @@ package nl.knaw.dans.wf.vaultmd.health;
 
 import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.lib.dataverse.DataverseException;
-import nl.knaw.dans.lib.dataverse.DataverseInstance;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class DataverseResponsiveCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(DataverseResponsiveCheck.class);
 
-    private final DataverseInstance dataverseClient;
+    private final DataverseClient dataverseClient;
 
-    public DataverseResponsiveCheck(DataverseInstance dataverseClient) {
+    public DataverseResponsiveCheck(DataverseClient dataverseClient) {
         this.dataverseClient = dataverseClient;
     }
 
     @Override
     protected Result check() {
         try {
-            dataverseClient.checkConnection().get();
+            log.info("Checking if root dataverse can be reached...");
+            dataverseClient.dataverse("root").view();
+            log.info("OK: root dataverse is reachable.");
         }
-        catch (DataverseException e) {
+        catch (IOException | DataverseException e) {
             log.warn("Dataverse connection check failed", e);
             return Result.unhealthy("Dataverse could not be reached: " + e.getMessage(), e);
         }

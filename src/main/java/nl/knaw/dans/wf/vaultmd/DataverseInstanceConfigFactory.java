@@ -16,8 +16,7 @@
 package nl.knaw.dans.wf.vaultmd;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import nl.knaw.dans.lib.dataverse.DataverseInstanceConfig;
-import scala.Option;
+import nl.knaw.dans.lib.dataverse.DataverseClientConfig;
 
 import java.net.URI;
 
@@ -34,9 +33,8 @@ public class DataverseInstanceConfigFactory {
     public DataverseInstanceConfigFactory() {
     }
 
-    public DataverseInstanceConfig build() {
-        return new DataverseInstanceConfig(baseUrl, apiKey, Option.empty(), connectionTimeoutMs, readTimeoutMs, Integer.toString(apiVersion), awaitLockStateMaxNumberOfRetries,
-            awaitLockStateMillisecondsBetweenRetries);
+    public DataverseClientConfig build() {
+        return new DataverseClientConfig(baseUrl, apiKey, connectionTimeoutMs, readTimeoutMs);
     }
 
     @JsonProperty

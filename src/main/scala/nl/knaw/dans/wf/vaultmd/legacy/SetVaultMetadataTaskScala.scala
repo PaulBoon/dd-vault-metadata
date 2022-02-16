@@ -15,27 +15,33 @@
  */
 package nl.knaw.dans.wf.vaultmd.legacy
 
-import nl.knaw.dans.lib.dataverse.model.ResumeMessage
+import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage
+import nl.knaw.dans.lib.dataverse.{ DataverseClient, DataverseException, DataverseHttpResponse }
 import nl.knaw.dans.lib.dataverse.model.dataset.{ FieldList, MetadataBlock, MetadataField, PrimitiveSingleValueField }
-import nl.knaw.dans.lib.dataverse.{ DataverseException, DataverseInstance, DataverseResponse, Version }
 import nl.knaw.dans.lib.error.TryExtensions
-import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import nl.knaw.dans.wf.vaultmd.core.SetVaultMetadataTask
+
 import org.json4s.JValue
+import org.json4s.native.JsonMethods
+import org.slf4j.LoggerFactory
 
 import java.lang.Thread._
 import java.net.HttpURLConnection._
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
-class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse: DataverseInstance, nbnPrefix: String, maxNumberOfRetries: Int, timeBetweenRetries: Int) extends DebugEnhancedLogging {
+class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse: DataverseClient, nbnPrefix: String, maxNumberOfRetries: Int, timeBetweenRetries: Int) {
+  private val logger = LoggerFactory.getLogger(classOf[SetVaultMetadataTask])
+
   require(nbnPrefix != null)
-  private val dataset = dataverse.dataset(workFlowVariables.globalId, Option(workFlowVariables.invocationId))
+  private val dataset = dataverse.dataset(workFlowVariables.globalId, workFlowVariables.invocationId)
 
   def run(): Try[Unit] = {
     (for {
-      _ <- dataset.awaitLock(lockType = "Workflow")
+      _ <- Try { dataset.awaitLock("Workflow") }
       _ <- editVaultMetadata()
       _ <- resumeWorkflow(workFlowVariables.invocationId)
       _ = logger.info(s"Vault metadata set for dataset ${ workFlowVariables.globalId }. Dataset resume called.")
@@ -43,15 +49,15 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
       .recover {
         case NonFatal(e) =>
           logger.error(s"SetVaultMetadataTask for dataset ${ workFlowVariables.globalId } failed. Resuming dataset with 'fail=true'", e)
-          dataverse.workflows().resume(workFlowVariables.invocationId, ResumeMessage(Status = "Failure", Message = "Publication failed: pre-publication workflow returned an error", Reason = s"${ e.getMessage }"))
+          dataverse.workflows().resume(workFlowVariables.invocationId, new ResumeMessage("Failure", e.getMessage, "Publication failed: pre-publication workflow returned an error"))
       }
   }
 
   private def editVaultMetadata(): Try[Unit] = {
-    trace(())
+    logger.trace("ENTER")
     for {
-      draftDsvJson <- getDatasetVersion(Version.DRAFT)
-      optLatestPublishedDsvJson <- if (hasLatestPublishedVersion(workFlowVariables)) getDatasetVersion(Version.LATEST_PUBLISHED).map(Option(_))
+      draftDsvJson <- getDatasetVersion(":draft")
+      optLatestPublishedDsvJson <- if (hasLatestPublishedVersion(workFlowVariables)) getDatasetVersion(":latest-published").map(Option(_))
                                    else Success(None)
       bagId = getBagId(getVaultMetadataFieldValue(draftDsvJson, "dansBagId"), optLatestPublishedDsvJson, workFlowVariables)
       nbn = optLatestPublishedDsvJson
@@ -60,20 +66,21 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
         .getOrElse(getVaultMetadataFieldValue(draftDsvJson, "dansNbn")
           .getOrElse(mintUrnNbn()))
       vaultFieldsToUpdate = createFieldList(workFlowVariables, bagId, nbn)
-      _ <- dataset.editMetadata(vaultFieldsToUpdate, replace = true)
-      _ = debug("editMetadata call returned success. Data Vault Metadata should be added to Dataverse now.")
+      _ <- Try { dataset.editMetadata(vaultFieldsToUpdate, true) }
+      _ = logger.debug("editMetadata call returned success. Data Vault Metadata should be added to Dataverse now.")
     } yield ()
   }
 
-  private def getDatasetVersion(version: Version): Try[JValue] = {
+  private def getDatasetVersion(version: String): Try[JValue] = {
     for {
-      response <- dataset.view(version)
-      dsv <- response.json
-    } yield dsv
+      response <- Try { dataset.getVersion(version) }
+      dsv <- Try { response.getEnvelopeAsString }
+      json <- Try { JsonMethods.parse(dsv) }
+    } yield json
   }
 
   private def getBagId(optFoundBagId: Option[String], optLatestPublishedDatasetVersion: Option[JValue], w: WorkflowVariables): String = {
-    trace(optFoundBagId, w)
+    logger.trace(s"$optFoundBagId $w")
     optLatestPublishedDatasetVersion.map {
       latestPublishedDsv => { // Draft of version > 1.0
         val latestPublishedBagId = getVaultMetadataFieldValue(latestPublishedDsv, "dansBagId")
@@ -98,14 +105,14 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
   }
 
   private def getVaultMetadataFieldValue(dsvJson: JValue, fieldId: String): Option[String] = {
-    val pvmd = (dsvJson \\ "dansDataVaultMetadata")
+    val pvmd = dsvJson \\ "dansDataVaultMetadata"
     if (pvmd.children.isEmpty) Option.empty
     else {
       Try(pvmd.extract[MetadataBlock]).toOption
-        .flatMap(_.fields
+        .flatMap(_.getFields.asScala
           .map(_.asInstanceOf[PrimitiveSingleValueField])
-          .find(_.typeName == fieldId))
-        .map(_.value)
+          .find(_.getTypeName == fieldId))
+        .map(_.getValue)
     }
   }
 
@@ -117,36 +124,38 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
                               bagId: String,
                               nbn: String,
                              ): FieldList = {
-    trace(workFlowVariables, bagId, nbn)
+    logger.trace(s"$workFlowVariables $bagId $nbn")
     val fields = ListBuffer[MetadataField]()
-    fields.append(PrimitiveSingleValueField("dansDataversePid", workFlowVariables.globalId))
-    fields.append(PrimitiveSingleValueField("dansDataversePidVersion", s"${ workFlowVariables.majorVersion }.${ workFlowVariables.minorVersion }"))
-    fields.append(PrimitiveSingleValueField("dansBagId", bagId))
-    fields.append(PrimitiveSingleValueField("dansNbn", nbn))
-    FieldList(fields.toList)
+    fields.append(new PrimitiveSingleValueField("dansDataversePid", workFlowVariables.globalId))
+    fields.append(new PrimitiveSingleValueField("dansDataversePidVersion", s"${ workFlowVariables.majorVersion }.${ workFlowVariables.minorVersion }"))
+    fields.append(new PrimitiveSingleValueField("dansBagId", bagId))
+    fields.append(new PrimitiveSingleValueField("dansNbn", nbn))
+    val fieldlist = new FieldList()
+    fieldlist.setFields(fields.toList.asJava)
+    fieldlist
   }
 
   private def mintUrnNbn(): String = {
-    trace(())
+    logger.trace("ENTER")
     "urn:nbn:" + nbnPrefix + UUID.randomUUID().toString
   }
 
   private def mintBagId(): String = {
-    trace(())
+    logger.trace("ENTER")
     "urn:uuid:" + UUID.randomUUID().toString
   }
 
   private def resumeWorkflow(invocationId: String): Try[Unit] = {
-    trace(maxNumberOfRetries, timeBetweenRetries)
+    logger.trace(s"$maxNumberOfRetries $timeBetweenRetries")
     var numberOfTimesTried = 0
     var invocationIdNotFound = true
 
     do {
-      val resumeResponse = dataverse.workflows().resume(invocationId, ResumeMessage(Status = "Success", Message = "", Reason = ""))
+      val resumeResponse = Try { dataverse.workflows().resume(invocationId, new ResumeMessage("Success", "", "")) }
       invocationIdNotFound = checkForInvocationIdNotFoundError(resumeResponse, invocationId).unsafeGetOrThrow
 
       if (invocationIdNotFound) {
-        debug(s"Sleeping $timeBetweenRetries ms before next try..")
+        logger.debug(s"Sleeping $timeBetweenRetries ms before next try..")
         sleep(timeBetweenRetries)
         numberOfTimesTried += 1
       }
@@ -159,9 +168,13 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
     else Success(())
   }
 
-  private def checkForInvocationIdNotFoundError(resumeResponse: Try[DataverseResponse[Nothing]], invocationId: String): Try[Boolean] = {
-    resumeResponse.map(_.httpResponse.isError)
-      .recover { case e: DataverseException if e.status == HTTP_NOT_FOUND => true }
+  private def checkForInvocationIdNotFoundError(resumeResponse: Try[DataverseHttpResponse[AnyRef]], invocationId: String): Try[Boolean] = {
+    resumeResponse.map(r => isError(r.getHttpResponse.getStatusLine.getStatusCode))
+      .recover { case e: DataverseException if e.getStatus == HTTP_NOT_FOUND => true }
       .recoverWith { case e: Throwable => Failure(ExternalSystemCallException(s"Resume could not be called for dataset: $invocationId ", e)) }
+  }
+
+  private def isError(status: Int) = {
+    status >= 400
   }
 }

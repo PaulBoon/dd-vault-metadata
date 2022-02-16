@@ -19,8 +19,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import nl.knaw.dans.lib.dataverse.DataverseInstance;
-import nl.knaw.dans.lib.dataverse.DataverseInstanceConfig;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
+import nl.knaw.dans.lib.dataverse.DataverseClientConfig;
 import nl.knaw.dans.wf.vaultmd.health.DataverseResponsiveCheck;
 import nl.knaw.dans.wf.vaultmd.resources.StepInvocationResource;
 import nl.knaw.dans.wf.vaultmd.resources.StepRollbackResource;
@@ -45,8 +45,8 @@ public class DdWorkflowStepVaultMetadataApplication extends Application<DdWorkfl
 
     @Override
     public void run(final DdWorkflowStepVaultMetadataConfiguration configuration, final Environment environment) {
-        final DataverseInstanceConfig dvConfig = configuration.getDataverse().build();
-        final DataverseInstance dv = new DataverseInstance(dvConfig);
+        final DataverseClientConfig dvConfig = configuration.getDataverse().build();
+        final DataverseClient dv = new DataverseClient(dvConfig);
         environment.healthChecks().register("Dataverse", new DataverseResponsiveCheck(dv));
         ExecutorService executor = configuration.getTaskQueue().build(environment);
         environment.jersey().register(new StepInvocationResource(executor, dv));

@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.wf.vaultmd.resources;
 
-import nl.knaw.dans.lib.dataverse.DataverseInstance;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
 import nl.knaw.dans.wf.vaultmd.core.SetVaultMetadataTask;
 import org.slf4j.Logger;
@@ -36,9 +36,9 @@ public class StepInvocationResource {
     private static final Logger log = LoggerFactory.getLogger(StepInvocationResource.class);
 
     private final Executor executor;
-    private final DataverseInstance dataverseClient;
+    private final DataverseClient dataverseClient;
 
-    public StepInvocationResource(Executor executor, DataverseInstance dataverseClient) {
+    public StepInvocationResource(Executor executor, DataverseClient dataverseClient) {
         this.executor = executor;
         this.dataverseClient = dataverseClient;
     }

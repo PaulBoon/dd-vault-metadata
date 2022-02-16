@@ -47,4 +47,3 @@ dataverse:
   apiVersion: 1
   connectionTimeoutMs: 10000
   readTimeoutMs: 30000
-  apiKey: "" # Not used?

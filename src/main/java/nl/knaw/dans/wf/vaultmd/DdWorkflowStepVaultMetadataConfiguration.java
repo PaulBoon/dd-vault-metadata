@@ -16,6 +16,8 @@
 package nl.knaw.dans.wf.vaultmd;
 
 import io.dropwizard.Configuration;
+import nl.knaw.dans.lib.dataverse.DataverseClient;
+import nl.knaw.dans.lib.util.DataverseClientFactory;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
@@ -29,7 +31,7 @@ public class DdWorkflowStepVaultMetadataConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    private DataverseInstanceConfigFactory dataverse;
+    private DataverseClientFactory dataverse;
 
     public void setTaskQueue(ExecutorServiceFactory taskExecutorThreadPool) {
         this.taskQueue = taskExecutorThreadPool;
@@ -39,11 +41,11 @@ public class DdWorkflowStepVaultMetadataConfiguration extends Configuration {
         return taskQueue;
     }
 
-    public DataverseInstanceConfigFactory getDataverse() {
+    public DataverseClientFactory getDataverse() {
         return dataverse;
     }
 
-    public void setDataverse(DataverseInstanceConfigFactory dataverse) {
+    public void setDataverse(DataverseClientFactory dataverse) {
         this.dataverse = dataverse;
     }
 }

@@ -45,8 +45,7 @@ public class DdWorkflowStepVaultMetadataApplication extends Application<DdWorkfl
 
     @Override
     public void run(final DdWorkflowStepVaultMetadataConfiguration configuration, final Environment environment) {
-        final DataverseClientConfig dvConfig = configuration.getDataverse().build();
-        final DataverseClient dv = new DataverseClient(dvConfig);
+        final DataverseClient dv = configuration.getDataverse().build();
         environment.healthChecks().register("Dataverse", new DataverseResponsiveCheck(dv));
         ExecutorService executor = configuration.getTaskQueue().build(environment);
         environment.jersey().register(new StepInvocationResource(executor, dv));

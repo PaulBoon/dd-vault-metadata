@@ -15,21 +15,20 @@
  */
 package nl.knaw.dans.wf.vaultmd.legacy
 
+import nl.knaw.dans.lib.dataverse.model.dataset._
 import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage
 import nl.knaw.dans.lib.dataverse.{ DataverseClient, DataverseException, DataverseHttpResponse }
-import nl.knaw.dans.lib.dataverse.model.dataset.{ FieldList, MetadataBlock, MetadataField, PrimitiveSingleValueField }
 import nl.knaw.dans.lib.error.TryExtensions
 import nl.knaw.dans.wf.vaultmd.core.SetVaultMetadataTask
-
-import org.json4s.JValue
-import org.json4s.native.JsonMethods
+import org.json4s.{ Extraction, JObject, JValue }
+import org.json4s.native.{ JsonMethods, Serialization }
 import org.slf4j.LoggerFactory
 
 import java.lang.Thread._
 import java.net.HttpURLConnection._
 import java.util.UUID
-import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
@@ -57,10 +56,10 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
     logger.trace("ENTER")
     for {
       draftDsvJson <- getDatasetVersion(":draft")
-      optLatestPublishedDsvJson <- if (hasLatestPublishedVersion(workFlowVariables)) getDatasetVersion(":latest-published").map(Option(_))
-                                   else Success(None)
-      bagId = getBagId(getVaultMetadataFieldValue(draftDsvJson, "dansBagId"), optLatestPublishedDsvJson, workFlowVariables)
-      nbn = optLatestPublishedDsvJson
+      optLatestPublishedOrDeaccessionedDsvJson <- if (hasPreviousVersions(workFlowVariables)) getLatestsPublishedOrDeaccessionedVersion.map(Option(_))
+                                                  else Success(None)
+      bagId = getBagId(getVaultMetadataFieldValue(draftDsvJson, "dansBagId"), optLatestPublishedOrDeaccessionedDsvJson, workFlowVariables)
+      nbn = optLatestPublishedOrDeaccessionedDsvJson
         .map(pdsv => getVaultMetadataFieldValue(pdsv, "dansNbn")
           .getOrElse(throw new IllegalStateException("Found published dataset-version without NBN")))
         .getOrElse(getVaultMetadataFieldValue(draftDsvJson, "dansNbn")
@@ -77,6 +76,17 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
       dsv <- Try { response.getEnvelopeAsString }
       json <- Try { JsonMethods.parse(dsv) }
     } yield json
+  }
+
+  private def getLatestsPublishedOrDeaccessionedVersion: Try[JValue] = {
+    for {
+      response <- Try { dataset.getAllVersions }
+      dsv <- Try { response.getEnvelopeAsString }
+      json <- Try { JsonMethods.parse(dsv) }
+      versions = (json \ "data").extract[List[JObject]]
+      nonDraftVersions = versions.filter(v => (List("RELEASED", "DEACCESSIONED").contains((v \ "versionState").extract[String])))
+      latest = nonDraftVersions.maxBy(v => ((v \ "versionNumber").extract[String], (v \ "versionMinorNumber").extract[String]))
+    } yield latest
   }
 
   private def getBagId(optFoundBagId: Option[String], optLatestPublishedDatasetVersion: Option[JValue], w: WorkflowVariables): String = {
@@ -116,7 +126,7 @@ class SetVaultMetadataTaskScala(workFlowVariables: WorkflowVariables, dataverse:
     }
   }
 
-  private def hasLatestPublishedVersion(w: WorkflowVariables): Boolean = {
+  private def hasPreviousVersions(w: WorkflowVariables): Boolean = {
     s"${ w.majorVersion }.${ w.minorVersion }" != "1.0"
   }
 

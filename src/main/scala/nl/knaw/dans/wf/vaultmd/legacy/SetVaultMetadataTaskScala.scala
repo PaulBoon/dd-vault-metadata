@@ -20,8 +20,8 @@ import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage
 import nl.knaw.dans.lib.dataverse.{ DataverseClient, DataverseException, DataverseHttpResponse }
 import nl.knaw.dans.lib.error.TryExtensions
 import nl.knaw.dans.wf.vaultmd.core.SetVaultMetadataTask
-import org.json4s.{ Extraction, JObject, JValue }
-import org.json4s.native.{ JsonMethods, Serialization }
+import org.json4s.native.JsonMethods
+import org.json4s.{ JObject, JValue }
 import org.slf4j.LoggerFactory
 
 import java.lang.Thread._

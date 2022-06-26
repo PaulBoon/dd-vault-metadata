@@ -18,12 +18,11 @@ server:
 logging:
   level: INFO
   appenders:
-    - type: file
-      archive: true
-      logFormat: "%-5p [%d{ISO8601}] [%t] %c: %m%n%rEx"
+    - archive: false
       currentLogFilename: /var/opt/dans.knaw.nl/log/dd-workflow-step-vault-metadata/dd-workflow-step-vault-metadata.log
-      archivedLogFilenamePattern: /var/opt/dans.knaw.nl/log/dd-workflow-step-vault-metadata/dd-workflow-step-vault-metadata-%d.log
-      archivedFileCount: 5
+      type: file
+      timeZone: system
+
 #
 # Configures the threads on which the vault metadata setting actions are executed.
 #

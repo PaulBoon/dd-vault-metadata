@@ -15,12 +15,12 @@
  */
 package nl.knaw.dans.wf.vaultmd
 
-import nl.knaw.dans.lib.dataverse.model.dataset.{ CompoundField, ControlledSingleValueField, MetadataBlock, MetadataField, PrimitiveMultiValueField, PrimitiveSingleValueField }
+import nl.knaw.dans.lib.dataverse.model.dataset._
 import org.json4s.{ CustomSerializer, DefaultFormats, Extraction, Formats, JNull, JObject }
 
 import java.util
+import scala.collection.JavaConverters._
 import scala.collection.mutable
-import collection.JavaConverters._
 
 package object legacy {
   implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer + MetadataBlockSerializer

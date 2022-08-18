@@ -20,7 +20,6 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
-import nl.knaw.dans.lib.dataverse.DataverseClientConfig;
 import nl.knaw.dans.wf.vaultmd.health.DataverseResponsiveCheck;
 import nl.knaw.dans.wf.vaultmd.resources.StepInvocationResource;
 import nl.knaw.dans.wf.vaultmd.resources.StepRollbackResource;

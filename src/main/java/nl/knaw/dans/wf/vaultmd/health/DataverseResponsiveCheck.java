@@ -16,8 +16,8 @@
 package nl.knaw.dans.wf.vaultmd.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
+import nl.knaw.dans.lib.dataverse.DataverseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

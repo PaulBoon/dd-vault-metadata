@@ -55,7 +55,7 @@ BUILDING FROM SOURCE
 --------------------
 Prerequisites:
 
-* Java 8 or higher
+* Java 11 or higher
 * Maven 3.3.3 or higher
 * RPM
 

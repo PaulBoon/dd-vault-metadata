@@ -17,6 +17,7 @@ package nl.knaw.dans.wf.vaultmd.resources;
 
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
+import nl.knaw.dans.wf.vaultmd.core.DataverseService;
 import nl.knaw.dans.wf.vaultmd.core.SetVaultMetadataTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.util.concurrent.Executor;
 
 @Path("/invoke")
@@ -36,17 +36,17 @@ public class StepInvocationResource {
     private static final Logger log = LoggerFactory.getLogger(StepInvocationResource.class);
 
     private final Executor executor;
-    private final DataverseClient dataverseClient;
+    private final DataverseService dataverseService;
 
-    public StepInvocationResource(Executor executor, DataverseClient dataverseClient) {
+    public StepInvocationResource(Executor executor, DataverseService dataverseService) {
         this.executor = executor;
-        this.dataverseClient = dataverseClient;
+        this.dataverseService = dataverseService;
     }
 
     @POST
-    public void run(@Valid StepInvocation inv) throws IOException {
+    public void run(@Valid StepInvocation inv) {
         log.info("Received invocation: {}", inv);
-        executor.execute(new SetVaultMetadataTask(inv, dataverseClient));
+        executor.execute(new SetVaultMetadataTask(inv, dataverseService));
         log.info("Added new task to queue");
     }
 

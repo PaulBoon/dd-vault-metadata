@@ -35,11 +35,9 @@ public class StepRollbackResource {
     private static final Logger log = LoggerFactory.getLogger(StepRollbackResource.class);
 
     private final Executor executor;
-    private final DataverseClient dataverseClient;
 
-    public StepRollbackResource(Executor executor, DataverseClient dataverseClient) {
+    public StepRollbackResource(Executor executor) {
         this.executor = executor;
-        this.dataverseClient = dataverseClient;
     }
 
     @POST

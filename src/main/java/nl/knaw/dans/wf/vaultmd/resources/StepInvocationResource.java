@@ -18,6 +18,8 @@ package nl.knaw.dans.wf.vaultmd.resources;
 import nl.knaw.dans.lib.dataverse.DataverseClient;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
 import nl.knaw.dans.wf.vaultmd.core.DataverseService;
+import nl.knaw.dans.wf.vaultmd.core.IdMintingService;
+import nl.knaw.dans.wf.vaultmd.core.IdMintingServiceImpl;
 import nl.knaw.dans.wf.vaultmd.core.SetVaultMetadataTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,8 @@ public class StepInvocationResource {
     private final Executor executor;
     private final DataverseService dataverseService;
 
+    private final IdMintingService idMintingService = new IdMintingServiceImpl();
+
     public StepInvocationResource(Executor executor, DataverseService dataverseService) {
         this.executor = executor;
         this.dataverseService = dataverseService;
@@ -46,7 +50,7 @@ public class StepInvocationResource {
     @POST
     public void run(@Valid StepInvocation inv) {
         log.info("Received invocation: {}", inv);
-        executor.execute(new SetVaultMetadataTask(inv, dataverseService));
+        executor.execute(new SetVaultMetadataTask(inv, dataverseService, idMintingService));
         log.info("Added new task to queue");
     }
 

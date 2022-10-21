@@ -19,33 +19,35 @@ import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.FieldList;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
+import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class SetVaultMetadataTask implements Runnable {
-
     public static final String DANS_NBN = "dansNbn";
     public static final String DANS_BAG_ID = "dansBagId";
     private static final Logger log = LoggerFactory.getLogger(SetVaultMetadataTask.class);
-    private final StepInvocation stepInvocation;
-
-    private final int MAX_RETRIES = 10;
-    private final int RETRY_DELAY_MS = 1000;
+    private static final int MAX_RETRIES = 10;
+    private static final int RETRY_DELAY_MS = 1000;
 
     private final DataverseService dataverseService;
+    private final StepInvocation stepInvocation;
 
-    private final String nbnPrefix = "nl:ui:13-";
+    private final IdMintingService mintingService;
 
-    public SetVaultMetadataTask(StepInvocation stepInvocation, DataverseService dataverseService) {
+    public SetVaultMetadataTask(StepInvocation stepInvocation, DataverseService dataverseService, IdMintingService mintingService) {
         this.stepInvocation = stepInvocation;
         this.dataverseService = dataverseService;
+        this.mintingService = mintingService;
     }
 
     @Override
@@ -89,32 +91,40 @@ public class SetVaultMetadataTask implements Runnable {
         }
     }
 
-    Optional<String> getVaultMetadataFieldValue(DatasetVersion dataset, String fieldName) {
+    Optional<List<MetadataField>> getVaultMetadata(DatasetVersion datasetVersion) {
+        return Optional.ofNullable(datasetVersion.getMetadataBlocks().get("dansDataVaultMetadata")).map(MetadataBlock::getFields);
+    }
+
+    Optional<String> getVaultMetadataFieldValue(DatasetVersion datasetVersion, String fieldName) {
         // this gets the single value of a field in the metadata, eg dansDataVaultMetadata.fields[1].value
         // where fields[1].typeName equals the fieldName parameter
-        return Optional.ofNullable(dataset.getMetadataBlocks().get("dansDataVaultMetadata"))
-            .map(MetadataBlock::getFields)
+        var result = getVaultMetadata(datasetVersion)
             .map(fields -> fields.stream()
                 .filter(field -> field.getTypeName().equals(fieldName))
                 .findFirst())
             .flatMap(i -> i)
             .map(f -> (PrimitiveSingleValueField) f)
             .map(PrimitiveSingleValueField::getValue);
+
+        if (result.equals(Optional.of(""))) {
+            return Optional.empty();
+        }
+        return result;
     }
 
     FieldList getVaultMetadata(StepInvocation stepInvocation) throws IOException, DataverseException {
-        var dsv = dataverseService.getVersion(stepInvocation, ":draft")
+        var draftVersion = dataverseService.getVersion(stepInvocation, ":draft")
             .orElseThrow(() -> new IllegalArgumentException("No draft version found"));
 
-        var latestVersion = dataverseService.getLatestReleasedOrDeaccessionedVersion(stepInvocation);
+        var optLatestVersion = dataverseService.getLatestReleasedOrDeaccessionedVersion(stepInvocation);
 
         // if a latest version exists, use that to get the bag id
-        var bagId = latestVersion.map(m -> getBagId(dsv, m))
-            .orElseGet(() -> getBagId(dsv));
+        var bagId = optLatestVersion.map(latestVersion -> getBagId(draftVersion, latestVersion))
+            .orElseGet(() -> getBagId(draftVersion));
 
         // if a latest version exists, use that to get the NBN
-        var nbn = latestVersion.map(this::getNbn)
-            .orElseGet(() -> getVaultMetadataFieldValue(dsv, DANS_NBN).orElseGet(this::mintUrnNbn));
+        var nbn = optLatestVersion.map(this::getNbn)
+            .orElseGet(() -> getVaultMetadataFieldValue(draftVersion, DANS_NBN).orElseGet(mintingService::mintUrnNbn));
 
         var version = String.format("%s.%s", stepInvocation.getMajorVersion(), stepInvocation.getMinorVersion());
 
@@ -151,7 +161,8 @@ public class SetVaultMetadataTask implements Runnable {
                     lastException = e;
                 }
                 else {
-                    log.error("Workflow could not be resumed for dataset {}. Number of retries: {}. Time between retries in ms: {}", stepInvocation.getGlobalId(), tried, RETRY_DELAY_MS);
+                    log.error("Workflow could not be resumed for dataset {}. Number of retries: {}. Time between retries in ms: {}", stepInvocation.getGlobalId(), tried,
+                        RETRY_DELAY_MS);
                     throw e;
                 }
             }
@@ -170,7 +181,7 @@ public class SetVaultMetadataTask implements Runnable {
         var draftBagId = getVaultMetadataFieldValue(draftVersion, DANS_BAG_ID);
 
         return getVaultMetadataFieldValue(draftVersion, DANS_BAG_ID)
-            .orElseGet(() -> draftBagId.orElse(mintBagId()));
+            .orElseGet(() -> draftBagId.orElse(mintingService.mintBagId()));
     }
 
     String getBagId(DatasetVersion draftVersion, DatasetVersion latestPublishedDataset) {
@@ -189,7 +200,7 @@ public class SetVaultMetadataTask implements Runnable {
                      * This happens after publishing a new version via the UI. The bagId from the previous version is inherited by the new draft. However, we
                      * want every version to have a unique bagId.
                      */
-                    return mintBagId();
+                    return mintingService.mintBagId();
                 }
                 else {
                     /*
@@ -198,14 +209,6 @@ public class SetVaultMetadataTask implements Runnable {
                     return draftBagId.get();
                 }
             }).orElseThrow(() -> new IllegalArgumentException("Dataset with a latest published version without bag ID found!"));
-    }
-
-    String mintUrnNbn() {
-        return String.format("urn:nbn:%s%s", nbnPrefix, UUID.randomUUID());
-    }
-
-    String mintBagId() {
-        return String.format("urn:uuid:%s", UUID.randomUUID());
     }
 
 }

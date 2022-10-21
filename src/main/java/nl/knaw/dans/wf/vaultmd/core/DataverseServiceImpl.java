@@ -23,6 +23,7 @@ import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.FieldList;
 import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
+import org.apache.http.HttpStatus;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -47,7 +48,13 @@ public class DataverseServiceImpl implements DataverseService {
             return Optional.ofNullable(getDataset(stepInvocation).getVersion(name).getData());
         }
         catch (DataverseException e) {
-            return Optional.empty();
+            if (e.getStatus() == HttpStatus.SC_NOT_FOUND) {
+                return Optional.empty();
+            }
+            else {
+                // Don't return empty if there is some other error than "not found", to avoid confusing error messages.
+                throw new RuntimeException(e);
+            }
         }
     }
 

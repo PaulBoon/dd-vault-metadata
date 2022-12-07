@@ -30,11 +30,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class SetVaultMetadataTask implements Runnable {
     public static final String DANS_NBN = "dansNbn";
     public static final String DANS_BAG_ID = "dansBagId";
+    public static final String DANS_DATAVERSE_PID = "dansDataversePid";
+    public static final String DANS_DATAVERSE_PID_VERSION = "dansDataversePidVersion";
     private static final Logger log = LoggerFactory.getLogger(SetVaultMetadataTask.class);
     private static final int MAX_RETRIES = 10;
     private static final int RETRY_DELAY_MS = 1000;
@@ -43,11 +44,13 @@ public class SetVaultMetadataTask implements Runnable {
     private final StepInvocation stepInvocation;
 
     private final IdMintingService mintingService;
+    private final IdValidator idValidator;
 
-    public SetVaultMetadataTask(StepInvocation stepInvocation, DataverseService dataverseService, IdMintingService mintingService) {
+    public SetVaultMetadataTask(StepInvocation stepInvocation, DataverseService dataverseService, IdMintingService mintingService, IdValidator idValidator) {
         this.stepInvocation = stepInvocation;
         this.dataverseService = dataverseService;
         this.mintingService = mintingService;
+        this.idValidator = idValidator;
     }
 
     @Override
@@ -70,6 +73,10 @@ public class SetVaultMetadataTask implements Runnable {
 
             // update metadata
             var metadata = getVaultMetadata(stepInvocation);
+
+            log.info("Validating metadata for dataset {}", stepInvocation.getGlobalId());
+            validateBagMetadata(stepInvocation, metadata);
+
             log.info("Updating metadata for dataset {}", stepInvocation.getGlobalId());
             dataverseService.editMetadata(stepInvocation, metadata);
 
@@ -118,11 +125,11 @@ public class SetVaultMetadataTask implements Runnable {
 
         var optLatestVersion = dataverseService.getLatestReleasedOrDeaccessionedVersion(stepInvocation);
 
-        // if a latest version exists, use that to get the bag id
+        // if the latest version exists, use that to get the bag id
         var bagId = optLatestVersion.map(latestVersion -> getBagId(draftVersion, latestVersion))
             .orElseGet(() -> getBagId(draftVersion));
 
-        // if a latest version exists, use that to get the NBN
+        // if the latest version exists, use that to get the NBN
         var nbn = optLatestVersion.map(this::getNbn)
             .orElseGet(() -> getVaultMetadataFieldValue(draftVersion, DANS_NBN).orElseGet(mintingService::mintUrnNbn));
 
@@ -132,12 +139,105 @@ public class SetVaultMetadataTask implements Runnable {
             stepInvocation.getGlobalId(), version, DANS_BAG_ID, bagId, DANS_NBN, nbn);
 
         var fieldList = new FieldList();
-        fieldList.add(new PrimitiveSingleValueField("dansDataversePid", stepInvocation.getGlobalId()));
-        fieldList.add(new PrimitiveSingleValueField("dansDataversePidVersion", version));
+        fieldList.add(new PrimitiveSingleValueField(DANS_DATAVERSE_PID, stepInvocation.getGlobalId()));
+        fieldList.add(new PrimitiveSingleValueField(DANS_DATAVERSE_PID_VERSION, version));
         fieldList.add(new PrimitiveSingleValueField(DANS_BAG_ID, bagId));
         fieldList.add(new PrimitiveSingleValueField(DANS_NBN, nbn));
 
         return fieldList;
+    }
+
+    /**
+     * //@formatter:off
+     * For versions > 1.0:
+     *  - there MUST exist a previous released or deaccessioned version.
+     *  - dansDataversePid, dansDataversePidVersion, dansBagId and dansNbn MUST always be filled in.
+     *  - dansDataversePid and dansNbn must each have the same value for all versions
+     * dansNbn must be an urn:nbn
+     * dansBagId must be an urn:uuid
+     *
+     * @param stepInvocation
+     * @param fieldList
+     * @throws IOException
+     * @throws DataverseException
+     * @throws IllegalArgumentException when a validation error occurred
+     * //@formatter:on
+     */
+    void validateBagMetadata(StepInvocation stepInvocation, FieldList fieldList) throws IOException, DataverseException {
+
+        var bagId = getRequiredFieldListValue(fieldList, DANS_BAG_ID);
+        var nbn = getRequiredFieldListValue(fieldList, DANS_NBN);
+
+        log.debug("Validating bagId '{}' to be valid urn:uuid", bagId);
+        if (!idValidator.isValidUrnUuid(bagId)) {
+            throw new IllegalArgumentException(String.format("'%s' is not a valid urn:uuid", bagId));
+        }
+
+        log.debug("Validating nbn '{}' to be valid urn:nbn", nbn);
+        if (!idValidator.isValidUrnNbn(nbn)) {
+            throw new IllegalArgumentException(String.format("'%s' is not a valid urn:nbn", nbn));
+        }
+
+        var majorVersion = Integer.parseInt(stepInvocation.getMajorVersion());
+        var minorVersion = Integer.parseInt(stepInvocation.getMinorVersion());
+
+        // anything greater than 1.0
+        if (majorVersion > 1 || (majorVersion == 1 && minorVersion > 0)) {
+            var pidVersion = getRequiredFieldListValue(fieldList, DANS_DATAVERSE_PID_VERSION);
+            log.trace("Found '{}' property with value '{}'", DANS_DATAVERSE_PID_VERSION, pidVersion);
+            var pid = getRequiredFieldListValue(fieldList, DANS_DATAVERSE_PID);
+            log.trace("Found '{}' property with value '{}'", DANS_DATAVERSE_PID, pid);
+
+            var allVersions = dataverseService.getAllReleasedOrDeaccessionedVersion(stepInvocation);
+
+            // if there are no previous versions, it failed to validate
+            if (allVersions.size() == 0) {
+                throw new IllegalArgumentException(String.format(
+                    "Version %s.%s is greater than 1.0, but no previous version found", majorVersion, minorVersion
+                ));
+            }
+
+            // now ensure pid and nbn are the same for each version
+            for (var version : allVersions) {
+                var otherPid = getVaultMetadataFieldValue(version, DANS_DATAVERSE_PID)
+                    .orElseThrow(() -> new IllegalStateException(String.format(
+                        "Released or deaccessioned version found without '%s' property (version %s.%s)",
+                        DANS_DATAVERSE_PID, version.getVersionNumber(), version.getVersionMinorNumber()
+                    )));
+
+                var otherNbn = getVaultMetadataFieldValue(version, DANS_NBN)
+                    .orElseThrow(() -> new IllegalStateException(String.format(
+                        "Released or deaccessioned version found without '%s' property (version %s.%s)",
+                        DANS_NBN, version.getVersionNumber(), version.getVersionMinorNumber()
+                    )));
+
+                if (!StringUtils.equals(pid, otherPid)) {
+                    throw new IllegalStateException(String.format(
+                        "Mismatch in '%s' property, expected '%s' in version %s.%s, but instead found '%s'",
+                        DANS_DATAVERSE_PID, pid, version.getVersionNumber(), version.getVersionMinorNumber(), otherPid
+                    ));
+                }
+
+                if (!StringUtils.equals(nbn, otherNbn)) {
+                    throw new IllegalStateException(String.format(
+                        "Mismatch in '%s' property, expected '%s' in version %s.%s, but instead found '%s'",
+                        DANS_NBN, pid, version.getVersionNumber(), version.getVersionMinorNumber(), otherPid
+                    ));
+                }
+            }
+        }
+    }
+
+    private String getRequiredFieldListValue(FieldList fieldList, String key) {
+        return fieldList.getFields()
+            .stream()
+            .filter(i -> i.getTypeName().equals(key))
+            .filter(i -> i instanceof PrimitiveSingleValueField)
+            .map(i -> (PrimitiveSingleValueField) i)
+            .map(PrimitiveSingleValueField::getValue)
+            .filter(StringUtils::isNotBlank)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(String.format("'%s' missing from metadata", key)));
     }
 
     void resumeWorkflow(StepInvocation stepInvocation) throws IOException, DataverseException, InterruptedException {

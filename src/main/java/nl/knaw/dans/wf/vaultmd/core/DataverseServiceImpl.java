@@ -26,8 +26,10 @@ import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
 import org.apache.http.HttpStatus;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DataverseServiceImpl implements DataverseService {
     private final DataverseClient dataverseClient;
@@ -63,6 +65,13 @@ public class DataverseServiceImpl implements DataverseService {
         return getDataset(stepInvocation).getAllVersions().getData().stream()
             .filter(d -> Set.of("RELEASED", "DEACCESSIONED").contains(d.getVersionState()))
             .max(versionComparator);
+    }
+
+    @Override
+    public Collection<DatasetVersion> getAllReleasedOrDeaccessionedVersion(StepInvocation stepInvocation) throws DataverseException, IOException {
+        return getDataset(stepInvocation).getAllVersions().getData().stream()
+            .filter(d -> Set.of("RELEASED", "DEACCESSIONED").contains(d.getVersionState()))
+            .collect(Collectors.toList());
     }
 
     @Override

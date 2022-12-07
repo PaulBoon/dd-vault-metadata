@@ -20,6 +20,8 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.wf.vaultmd.core.DataverseServiceImpl;
+import nl.knaw.dans.wf.vaultmd.core.IdMintingServiceImpl;
+import nl.knaw.dans.wf.vaultmd.core.IdValidatorImpl;
 import nl.knaw.dans.wf.vaultmd.health.DataverseResponsiveCheck;
 import nl.knaw.dans.wf.vaultmd.resources.StepInvocationResource;
 import nl.knaw.dans.wf.vaultmd.resources.StepRollbackResource;
@@ -46,9 +48,12 @@ public class DdWorkflowStepVaultMetadataApplication extends Application<DdWorkfl
     public void run(final DdWorkflowStepVaultMetadataConfiguration configuration, final Environment environment) {
         final var dv = configuration.getDataverse().build();
         final var dataverseService = new DataverseServiceImpl(dv);
+        final var idValidator = new IdValidatorImpl();
+        final var idMintingService = new IdMintingServiceImpl();
+
         environment.healthChecks().register("Dataverse", new DataverseResponsiveCheck(dv));
         ExecutorService executor = configuration.getTaskQueue().build(environment);
-        environment.jersey().register(new StepInvocationResource(executor, dataverseService));
+        environment.jersey().register(new StepInvocationResource(executor, dataverseService, idMintingService, idValidator));
         environment.jersey().register(new StepRollbackResource(executor));
     }
 

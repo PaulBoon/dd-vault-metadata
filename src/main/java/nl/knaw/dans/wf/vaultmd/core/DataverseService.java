@@ -23,6 +23,7 @@ import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface DataverseService {
@@ -32,6 +33,8 @@ public interface DataverseService {
     Optional<DatasetVersion> getVersion(StepInvocation stepInvocation, String name) throws DataverseException, IOException;
 
     Optional<DatasetVersion> getLatestReleasedOrDeaccessionedVersion(StepInvocation stepInvocation) throws DataverseException, IOException;
+
+    Collection<DatasetVersion> getAllReleasedOrDeaccessionedVersion(StepInvocation stepInvocation) throws DataverseException, IOException;
 
     void lockDataset(StepInvocation stepInvocation, String workflow) throws DataverseException, IOException;
 

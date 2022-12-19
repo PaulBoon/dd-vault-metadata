@@ -16,9 +16,7 @@
 package nl.knaw.dans.wf.vaultmd.core;
 
 import nl.knaw.dans.lib.dataverse.DataverseException;
-import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.FieldList;
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock;
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataField;
 import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
@@ -29,13 +27,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static nl.knaw.dans.wf.vaultmd.core.TestUtilities.createDatasetVersion;
+import static nl.knaw.dans.wf.vaultmd.core.TestUtilities.createDatasetVersionWithoutVaultMetadataBlock;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -49,47 +47,6 @@ class SetVaultMetadataTaskTest {
 
     private final IdMintingService mintingServiceMock = Mockito.spy(new IdMintingServiceImpl());
     private final IdValidator idValidator = new IdValidatorImpl();
-
-    /*
-     * Helper functions
-     */
-    private static DatasetVersion createDatasetVersion(String bagId, String nbn, int version, int versionMinor, String versionState) {
-        var datasetVersion = new DatasetVersion();
-        datasetVersion.setVersionNumber(version);
-        datasetVersion.setVersionMinorNumber(versionMinor);
-        datasetVersion.setVersionState(versionState);
-        datasetVersion.setMetadataBlocks(new HashMap<>());
-
-        var block = new MetadataBlock();
-        block.setFields(new ArrayList<>());
-
-        if (bagId != null) {
-            block.getFields().add(new PrimitiveSingleValueField("dansBagId", bagId));
-        }
-
-        if (nbn != null) {
-            block.getFields().add(new PrimitiveSingleValueField("dansNbn", nbn));
-        }
-
-        block.getFields().add(new PrimitiveSingleValueField("dansDataversePid", "globalId"));
-
-        datasetVersion.getMetadataBlocks().put("dansDataVaultMetadata", block);
-
-        return datasetVersion;
-    }
-
-    private static DatasetVersion createDatasetVersionWithoutVaultMetadataBlock(int version, int versionMinor, String versionState) {
-        var datasetVersion = new DatasetVersion();
-        datasetVersion.setVersionNumber(version);
-        datasetVersion.setVersionMinorNumber(versionMinor);
-        datasetVersion.setVersionState(versionState);
-        datasetVersion.setMetadataBlocks(new HashMap<>());
-
-        var block = new MetadataBlock();
-        block.setFields(new ArrayList<>());
-
-        return datasetVersion;
-    }
 
     private static AbstractStringAssert<?> assertThatMetadataField(FieldList fieldList, String property) {
         return assertThat(fieldList.getFields())

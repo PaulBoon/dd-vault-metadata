@@ -118,8 +118,6 @@ class SetVaultMetadataTaskTest {
 
         Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
             .thenReturn(Optional.of(draft));
-        Mockito.when(dataverseServiceMock.getLatestReleasedOrDeaccessionedVersion(Mockito.any()))
-            .thenReturn(Optional.of(previous));
         Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
             .thenReturn(List.of(previous));
 
@@ -140,8 +138,8 @@ class SetVaultMetadataTaskTest {
 
         Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
             .thenReturn(Optional.of(draft));
-        Mockito.when(dataverseServiceMock.getLatestReleasedOrDeaccessionedVersion(Mockito.any()))
-            .thenReturn(Optional.of(previous));
+        Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
+            .thenReturn(List.of(previous));
         Mockito.when(mintingServiceMock.mintBagId()).thenReturn(newBagId);
 
         var step = new StepInvocation("invokeId", "globalId", "datasetId", "1", "1");
@@ -163,8 +161,8 @@ class SetVaultMetadataTaskTest {
 
         Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
             .thenReturn(Optional.of(draft));
-        Mockito.when(dataverseServiceMock.getLatestReleasedOrDeaccessionedVersion(Mockito.any()))
-            .thenReturn(Optional.empty());
+        Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
+            .thenReturn(List.of());
         Mockito.when(mintingServiceMock.mintBagId()).thenReturn(newBagId);
         Mockito.when(mintingServiceMock.mintUrnNbn()).thenReturn(newNbn);
 
@@ -189,8 +187,8 @@ class SetVaultMetadataTaskTest {
 
         Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
             .thenReturn(Optional.of(draft));
-        Mockito.when(dataverseServiceMock.getLatestReleasedOrDeaccessionedVersion(Mockito.any()))
-            .thenReturn(Optional.of(previous));
+        Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
+            .thenReturn(List.of(previous));
 
         var step = new StepInvocation("invokeId", "globalId", "datasetId", "1", "1");
         var task = createTask(step);
@@ -211,8 +209,8 @@ class SetVaultMetadataTaskTest {
 
         Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
             .thenReturn(Optional.of(draft));
-        Mockito.when(dataverseServiceMock.getLatestReleasedOrDeaccessionedVersion(Mockito.any()))
-            .thenReturn(Optional.empty());
+        Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
+            .thenReturn(List.of());
         Mockito.when(mintingServiceMock.mintBagId()).thenReturn(newBagId);
         Mockito.when(mintingServiceMock.mintUrnNbn()).thenReturn(newNbn);
 
@@ -235,8 +233,8 @@ class SetVaultMetadataTaskTest {
 
         Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
             .thenReturn(Optional.of(draft));
-        Mockito.when(dataverseServiceMock.getLatestReleasedOrDeaccessionedVersion(Mockito.any()))
-            .thenReturn(Optional.empty());
+        Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
+            .thenReturn(List.of());
         Mockito.when(mintingServiceMock.mintBagId()).thenReturn(newBagId);
         Mockito.when(mintingServiceMock.mintUrnNbn()).thenReturn(newNbn);
 
@@ -261,8 +259,8 @@ class SetVaultMetadataTaskTest {
 
         Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
             .thenReturn(Optional.of(draft));
-        Mockito.when(dataverseServiceMock.getLatestReleasedOrDeaccessionedVersion(Mockito.any()))
-            .thenReturn(Optional.of(previous));
+        Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
+            .thenReturn(List.of(previous));
         Mockito.when(mintingServiceMock.mintBagId())
             .thenReturn(newBagId);
 
@@ -271,6 +269,36 @@ class SetVaultMetadataTaskTest {
         var metadata = task.getVaultMetadata(step);
 
         // the draft does not have a bag ID, but the previous version has, so it should mint a new bag ID
+        assertThatMetadataField(metadata, "dansDataversePid").isEqualTo("globalId");
+        assertThatMetadataField(metadata, "dansDataversePidVersion").isEqualTo("1.1");
+        assertThatMetadataField(metadata, "dansBagId").isEqualTo(newBagId);
+        assertThatMetadataField(metadata, "dansNbn").isEqualTo(nbn);
+    }
+
+    @Test
+    void getVaultMetadata_with_previous_multiple_versions_should_mint_new_bagId() throws IOException, DataverseException {
+        final var bagId = "urn:uuid:cbdf4d18-65af-42d2-baf3-6ca07ddfd3b2";
+        final var deaccessionedBagId = "urn:uuid:6fcfe06e-7f24-4989-9a27-18317c1970bb";
+        final var newBagId = "urn:uuid:cbdf4d18-65af-42d2-baf3-6ca07ddfd3b2";
+        final var nbn = "urn:nbn:nl:ui:13-73750978-5587-4e2b-937f-6b190e44fcae";
+
+        var draft = createDatasetVersion(bagId, null, 1, 1, "DRAFT");
+        var previous = createDatasetVersion(bagId, nbn, 1, 0, "RELEASED");
+        var deaccessioned = createDatasetVersion(deaccessionedBagId, nbn, 1, 0, "DEACCESSIONED");
+
+        Mockito.when(dataverseServiceMock.getVersion(Mockito.any(), Mockito.any()))
+            .thenReturn(Optional.of(draft));
+        Mockito.when(dataverseServiceMock.getAllReleasedOrDeaccessionedVersion(Mockito.any()))
+            .thenReturn(List.of(deaccessioned, previous));
+        Mockito.when(mintingServiceMock.mintBagId())
+            .thenReturn(newBagId);
+
+        var step = new StepInvocation("invokeId", "globalId", "datasetId", "1", "1");
+        var task = createTask(step);
+        var metadata = task.getVaultMetadata(step);
+
+        // the draft has the same ID as the previously published version, but different from the latest version which is deaccessioned
+        // see https://drivenbydata.atlassian.net/browse/DD-1211 for more details
         assertThatMetadataField(metadata, "dansDataversePid").isEqualTo("globalId");
         assertThatMetadataField(metadata, "dansDataversePidVersion").isEqualTo("1.1");
         assertThatMetadataField(metadata, "dansBagId").isEqualTo(newBagId);

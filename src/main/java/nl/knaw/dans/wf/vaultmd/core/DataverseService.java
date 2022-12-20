@@ -32,8 +32,14 @@ public interface DataverseService {
 
     Optional<DatasetVersion> getVersion(StepInvocation stepInvocation, String name) throws DataverseException, IOException;
 
-    Optional<DatasetVersion> getLatestReleasedOrDeaccessionedVersion(StepInvocation stepInvocation) throws DataverseException, IOException;
-
+    /**
+     * Gets all dataset versions from Dataverse in descending order
+     *
+     * @param stepInvocation
+     * @return a list of DatasetVersion objects that have status RELEASED or DEACCESSIONED sorted in descending order
+     * @throws DataverseException
+     * @throws IOException
+     */
     Collection<DatasetVersion> getAllReleasedOrDeaccessionedVersion(StepInvocation stepInvocation) throws DataverseException, IOException;
 
     void lockDataset(StepInvocation stepInvocation, String workflow) throws DataverseException, IOException;

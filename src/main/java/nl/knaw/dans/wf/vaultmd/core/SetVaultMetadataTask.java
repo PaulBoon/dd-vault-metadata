@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SetVaultMetadataTask implements Runnable {
     public static final String DANS_NBN = "dansNbn";
@@ -123,14 +125,23 @@ public class SetVaultMetadataTask implements Runnable {
         var draftVersion = dataverseService.getVersion(stepInvocation, ":draft")
             .orElseThrow(() -> new IllegalArgumentException("No draft version found"));
 
-        var optLatestVersion = dataverseService.getLatestReleasedOrDeaccessionedVersion(stepInvocation);
+        var allVersions = dataverseService.getAllReleasedOrDeaccessionedVersion(stepInvocation);
+
+        // get a list of all published or deaccessioned dataset versions
+        var bagIds = allVersions.stream()
+            .map(datasetVersion -> getVaultMetadataFieldValue(datasetVersion, DANS_BAG_ID))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toSet());
 
         // if the latest version exists, use that to get the bag id
-        var bagId = optLatestVersion.map(latestVersion -> getBagId(draftVersion, latestVersion))
-            .orElseGet(() -> getBagId(draftVersion));
+        var bagId = getBagId(draftVersion, bagIds);
+
+        // find the latest version
+        var latestVersion = allVersions.stream().findFirst();
 
         // if the latest version exists, use that to get the NBN
-        var nbn = optLatestVersion.map(this::getNbn)
+        var nbn = latestVersion.map(this::getNbn)
             .orElseGet(() -> getVaultMetadataFieldValue(draftVersion, DANS_NBN).orElseGet(mintingService::mintUrnNbn));
 
         var version = String.format("%s.%s", stepInvocation.getMajorVersion(), stepInvocation.getMinorVersion());
@@ -277,38 +288,29 @@ public class SetVaultMetadataTask implements Runnable {
             .orElseThrow(() -> new IllegalArgumentException("Dataset with a latest published version without NBN found!"));
     }
 
-    String getBagId(DatasetVersion draftVersion) {
-        var draftBagId = getVaultMetadataFieldValue(draftVersion, DANS_BAG_ID);
-
-        return getVaultMetadataFieldValue(draftVersion, DANS_BAG_ID)
-            .orElseGet(() -> draftBagId.orElse(mintingService.mintBagId()));
-    }
-
-    String getBagId(DatasetVersion draftVersion, DatasetVersion latestPublishedDataset) {
+    String getBagId(DatasetVersion draftVersion, Set<String> bagIds) {
         var draftBagId = getVaultMetadataFieldValue(draftVersion, DANS_BAG_ID);
 
         /*
-        create a new bag id if:
-        - the draft bag doesn't have a bag id
-        - the latest published bag id is the same as the draft bag id
-        - the latest published version does not exist, and the bag id in the draft is also empty
+         * create a new bag id if:
+         * - the draft bag doesn't have a bag id
+         * - any of the published or deaccessioned versions have the same bag ID as the draft already
+         * - the latest published version does not exist, and the bag id in the draft is also empty
          */
-        return getVaultMetadataFieldValue(latestPublishedDataset, DANS_BAG_ID)
-            .map(latestBagId -> {
-                if (draftBagId.isEmpty() || latestBagId.equals(draftBagId.orElse(null))) {
-                    /*
-                     * This happens after publishing a new version via the UI. The bagId from the previous version is inherited by the new draft. However, we
-                     * want every version to have a unique bagId.
-                     */
+        return draftBagId.map(bagId -> {
+                /*
+                 * This happens after publishing a new version via the UI. The bagId from the previous version is inherited by the new draft. However, we
+                 * want every version to have a unique bagId.
+                 */
+                if (StringUtils.isBlank(bagId) || bagIds.contains(bagId)) {
                     return mintingService.mintBagId();
                 }
-                else {
-                    /*
-                     * Provided by machine deposit.
-                     */
-                    return draftBagId.get();
-                }
-            }).orElseThrow(() -> new IllegalArgumentException("Dataset with a latest published version without bag ID found!"));
-    }
 
+                /*
+                 * Provided by machine deposit.
+                 */
+                return bagId;
+            })
+            .orElseGet(mintingService::mintBagId);
+    }
 }

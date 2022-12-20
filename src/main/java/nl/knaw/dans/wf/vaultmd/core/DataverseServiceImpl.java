@@ -61,16 +61,10 @@ public class DataverseServiceImpl implements DataverseService {
     }
 
     @Override
-    public Optional<DatasetVersion> getLatestReleasedOrDeaccessionedVersion(StepInvocation stepInvocation) throws DataverseException, IOException {
-        return getDataset(stepInvocation).getAllVersions().getData().stream()
-            .filter(d -> Set.of("RELEASED", "DEACCESSIONED").contains(d.getVersionState()))
-            .max(versionComparator);
-    }
-
-    @Override
     public Collection<DatasetVersion> getAllReleasedOrDeaccessionedVersion(StepInvocation stepInvocation) throws DataverseException, IOException {
-        return getDataset(stepInvocation).getAllVersions().getData().stream()
+        return getAllDatasetVersions(stepInvocation).stream()
             .filter(d -> Set.of("RELEASED", "DEACCESSIONED").contains(d.getVersionState()))
+            .sorted((a, b) -> -1 * versionComparator.compare(a, b))
             .collect(Collectors.toList());
     }
 
@@ -88,4 +82,7 @@ public class DataverseServiceImpl implements DataverseService {
         return dataverseClient.dataset(stepInvocation.getGlobalId(), stepInvocation.getInvocationId());
     }
 
+    Collection<DatasetVersion> getAllDatasetVersions(StepInvocation stepInvocation) throws IOException, DataverseException {
+        return getDataset(stepInvocation).getAllVersions().getData();
+    }
 }

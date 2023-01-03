@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>dd-vault-metadata</artifactId>
-    <version>1.6.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
 
     <name>DD Vault Metadata</name>
     <url>https://github.com/DANS-KNAW/dd-vault-metadata</url>

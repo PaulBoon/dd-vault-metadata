@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>dd-workflow-step-vault-metadata</artifactId>
-    <version>1.5.1-SNAPSHOT</version>
+    <version>1.6.0</version>
 
     <name>DD Workflow Step Vault Metadata</name>
     <url>https://github.com/DANS-KNAW/dd-workflow-step-vault-metadata</url>
@@ -39,7 +39,7 @@
 
     <scm>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v1.6.0</tag>
     </scm>
 
     <dependencies>

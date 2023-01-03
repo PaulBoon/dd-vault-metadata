@@ -17,7 +17,7 @@
 
 #include <service.sh>
 
-MODULE_NAME=dd-workflow-step-vault-metadata
+MODULE_NAME=dd-vault-metadata
 PHASE="POST-TRANS"
 
 echo "$PHASE: START"

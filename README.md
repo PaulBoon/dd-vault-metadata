@@ -1,7 +1,7 @@
-dd-workflow-step-vault-metadata
+dd-vault-metadata
 ===============================
 
-![Build Status](https://github.com/DANS-KNAW/dd-workflow-step-vault-metadata/actions/workflows/build.yml/badge.svg)
-![Site Status](https://github.com/DANS-KNAW/dd-workflow-step-vault-metadata/actions/workflows/docs.yml/badge.svg)
+![Build Status](https://github.com/DANS-KNAW/dd-vault-metadata/actions/workflows/build.yml/badge.svg)
+![Site Status](https://github.com/DANS-KNAW/dd-vault-metadata/actions/workflows/docs.yml/badge.svg)
 
-For documentation see: https://dans-knaw.github.io/dd-workflow-step-vault-metadata
+For documentation see: https://dans-knaw.github.io/dd-vault-metadata

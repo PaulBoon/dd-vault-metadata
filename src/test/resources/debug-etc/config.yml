@@ -14,4 +14,4 @@ logging:
     - type: console
     - type: file
       archive: false
-      currentLogFilename: data/dd-workflow-step-vault-metadata.log
+      currentLogFilename: data/dd-vault-metadata.log

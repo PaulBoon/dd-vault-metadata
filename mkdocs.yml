@@ -14,12 +14,12 @@
 # limitations under the License.
 #
 
-site_name: dd-workflow-step-vault-metadata
+site_name: dd-vault-metadata
 theme:
   name: readthedocs
 
-repo_name: DANS-KNAW/dd-workflow-step-vault-metadata
-repo_url: https://github.com/DANS-KNAW/dd-workflow-step-vault-metadata
+repo_name: DANS-KNAW/dd-vault-metadata
+repo_url: https://github.com/DANS-KNAW/dd-vault-metadata
 
 nav:
   - Manual: index.md

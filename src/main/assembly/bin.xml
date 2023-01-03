@@ -39,7 +39,7 @@
             <directory>${project.basedir}/src/main/assembly/dist/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <includes>
-                <include>dd-workflow-step-vault-metadata</include>
+                <include>dd-vault-metadata</include>
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>

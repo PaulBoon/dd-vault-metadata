@@ -1,4 +1,4 @@
-dd-workflow-step-vault-metadata
+dd-vault-metadata
 ===============================
 
 Dataverse workflow step for setting DANS Data Vault metadata.
@@ -7,7 +7,7 @@ Dataverse workflow step for setting DANS Data Vault metadata.
 SYNOPSIS
 --------
 
-    dd-workflow-step-vault-metadata { server | check }
+    dd-vault-metadata { server | check }
     
 
 DESCRIPTION
@@ -38,7 +38,7 @@ ARGUMENTS
 INSTALLATION AND CONFIGURATION
 ------------------------------
 Currently this project is built as an RPM package for RHEL7/CentOS7 and later. The RPM will install the binaries to
-`/opt/dans.knaw.nl/dd-workflow-step-vault-metadata` and the configuration files to `/etc/opt/dans.knaw.nl/dd-workflow-step-vault-metadata`. 
+`/opt/dans.knaw.nl/dd-vault-metadata` and the configuration files to `/etc/opt/dans.knaw.nl/dd-vault-metadata`. 
 
 To install the module on systems that do not support RPM, you can copy and unarchive the tarball to the target host.
 You will have to take care of placing the files in the correct locations for your system yourself. For instructions
@@ -61,8 +61,8 @@ Prerequisites:
 
 Steps:
     
-    git clone https://github.com/DANS-KNAW/dd-workflow-step-vault-metadata.git
-    cd dd-workflow-step-vault-metadata 
+    git clone https://github.com/DANS-KNAW/dd-vault-metadata.git
+    cd dd-vault-metadata 
     mvn clean install
 
 If the `rpm` executable is found at `/usr/local/bin/rpm`, the build profile that includes the RPM 

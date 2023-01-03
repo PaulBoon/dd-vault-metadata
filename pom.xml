@@ -25,16 +25,16 @@
         <version>0.11.0</version>
     </parent>
 
-    <artifactId>dd-workflow-step-vault-metadata</artifactId>
+    <artifactId>dd-vault-metadata</artifactId>
     <version>1.6.1-SNAPSHOT</version>
 
-    <name>DD Workflow Step Vault Metadata</name>
-    <url>https://github.com/DANS-KNAW/dd-workflow-step-vault-metadata</url>
+    <name>DD Vault Metadata</name>
+    <url>https://github.com/DANS-KNAW/dd-vault-metadata</url>
     <description>Set the DANS Data Vault metadata</description>
     <inceptionYear>2021</inceptionYear>
 
     <properties>
-        <main-class>nl.knaw.dans.wf.vaultmd.DdWorkflowStepVaultMetadataApplication</main-class>
+        <main-class>nl.knaw.dans.wf.vaultmd.DdVaultMetadataApplication</main-class>
     </properties>
 
     <scm>

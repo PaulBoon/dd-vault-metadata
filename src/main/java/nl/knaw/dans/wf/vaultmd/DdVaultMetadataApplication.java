@@ -28,10 +28,10 @@ import nl.knaw.dans.wf.vaultmd.resources.StepRollbackResource;
 
 import java.util.concurrent.ExecutorService;
 
-public class DdWorkflowStepVaultMetadataApplication extends Application<DdWorkflowStepVaultMetadataConfiguration> {
+public class DdVaultMetadataApplication extends Application<DdVaultMetadataConfiguration> {
 
     public static void main(final String[] args) throws Exception {
-        new DdWorkflowStepVaultMetadataApplication().run(args);
+        new DdVaultMetadataApplication().run(args);
     }
 
     @Override
@@ -40,12 +40,12 @@ public class DdWorkflowStepVaultMetadataApplication extends Application<DdWorkfl
     }
 
     @Override
-    public void initialize(final Bootstrap<DdWorkflowStepVaultMetadataConfiguration> bootstrap) {
+    public void initialize(final Bootstrap<DdVaultMetadataConfiguration> bootstrap) {
         bootstrap.getObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     @Override
-    public void run(final DdWorkflowStepVaultMetadataConfiguration configuration, final Environment environment) {
+    public void run(final DdVaultMetadataConfiguration configuration, final Environment environment) {
         final var dv = configuration.getDataverse().build();
         final var dataverseService = new DataverseServiceImpl(dv);
         final var idValidator = new IdValidatorImpl();

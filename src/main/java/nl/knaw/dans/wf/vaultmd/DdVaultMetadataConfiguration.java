@@ -22,7 +22,7 @@ import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public class DdWorkflowStepVaultMetadataConfiguration extends Configuration {
+public class DdVaultMetadataConfiguration extends Configuration {
 
     @Valid
     @NotNull

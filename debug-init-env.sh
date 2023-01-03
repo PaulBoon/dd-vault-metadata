@@ -17,5 +17,5 @@
 
 echo -n "Pre-creating log..."
 TEMPDIR=data
-touch $TEMPDIR/dd-workflow-step-vault-metadata.log
+touch $TEMPDIR/dd-vault-metadata.log
 echo "OK"

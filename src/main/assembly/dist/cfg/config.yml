@@ -1,5 +1,5 @@
 #
-# dd-workflow-step-vault-metadata
+# dd-vault-metadata
 #
 
 server:
@@ -19,7 +19,7 @@ logging:
   level: INFO
   appenders:
     - archive: false
-      currentLogFilename: /var/opt/dans.knaw.nl/log/dd-workflow-step-vault-metadata/dd-workflow-step-vault-metadata.log
+      currentLogFilename: /var/opt/dans.knaw.nl/log/dd-vault-metadata/dd-vault-metadata.log
       type: file
       timeZone: system
 

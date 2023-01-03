@@ -2,12 +2,12 @@
 Description=DD Workflow Step Vault Metadata Service
 
 [Service]
-ExecStart=/opt/dans.knaw.nl/dd-workflow-step-vault-metadata/bin/dd-workflow-step-vault-metadata server /etc/opt/dans.knaw.nl/dd-workflow-step-vault-metadata/config.yml
+ExecStart=/opt/dans.knaw.nl/dd-vault-metadata/bin/dd-vault-metadata server /etc/opt/dans.knaw.nl/dd-vault-metadata/config.yml
 # Java returns 143 even if the SIGTERM was handled correctly.
 SuccessExitStatus=143
 
-User=dd-workflow-step-vault-metadata
-Group=dd-workflow-step-vault-metadata
+User=dd-vault-metadata
+Group=dd-vault-metadata
 
 [Install]
 WantedBy=multi-user.target

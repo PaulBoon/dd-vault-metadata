@@ -1,5 +1,5 @@
 [Unit]
-Description=DD Workflow Step Vault Metadata Service
+Description=DD Vault Metadata Service
 
 [Service]
 ExecStart=/opt/dans.knaw.nl/dd-vault-metadata/bin/dd-vault-metadata server /etc/opt/dans.knaw.nl/dd-vault-metadata/config.yml

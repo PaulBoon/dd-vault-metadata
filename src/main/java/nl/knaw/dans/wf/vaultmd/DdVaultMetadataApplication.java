@@ -36,7 +36,7 @@ public class DdVaultMetadataApplication extends Application<DdVaultMetadataConfi
 
     @Override
     public String getName() {
-        return "DD Workflow Step Vault Metadata";
+        return "DD Vault Metadata";
     }
 
     @Override

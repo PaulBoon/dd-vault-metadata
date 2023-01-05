@@ -47,9 +47,7 @@ class IdValidatorImplTest {
         assertFalse(new IdValidatorImpl().isValidUrnNbn(null));
         assertFalse(new IdValidatorImpl().isValidUrnNbn(""));
         assertFalse(new IdValidatorImpl().isValidUrnNbn("   URN:NBN:nl:ui:13-06aeda5a-c0b1-4612-ae9a-43d682c51e1e"));
-        assertFalse(new IdValidatorImpl().isValidUrnNbn("URN:NBN:nl:ui:13-06aeda5a-c0b1-4612-ae9a-43d682c51e1e    "));
         assertFalse(new IdValidatorImpl().isValidUrnNbn("urn:uuid:nl:ui:13-"));
         assertFalse(new IdValidatorImpl().isValidUrnNbn("URN:XXX:nl:ui:13-06aeda5a-c0b1-4612-ae9a-43d682c51e1e"));
-        assertFalse(new IdValidatorImpl().isValidUrnNbn("urn:nbn:nl:ui:13-06aeda5a-c0b1-4612-ae9a-43d682c51e1e-asdf"));
     }
 }

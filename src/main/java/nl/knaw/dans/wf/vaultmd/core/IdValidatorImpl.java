@@ -31,14 +31,6 @@ public class IdValidatorImpl implements IdValidator {
             return false;
         }
 
-        try {
-            // check if the UUID can be parsed
-            UUID.fromString(id.substring(NBN_PREFIX.length()));
-        }
-        catch (IllegalArgumentException e) {
-            return false;
-        }
-
         return true;
     }
 

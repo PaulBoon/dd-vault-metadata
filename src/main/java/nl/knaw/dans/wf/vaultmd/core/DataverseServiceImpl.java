@@ -24,6 +24,8 @@ import nl.knaw.dans.lib.dataverse.model.dataset.FieldList;
 import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
 import org.apache.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -32,11 +34,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DataverseServiceImpl implements DataverseService {
+    private static final Logger log = LoggerFactory.getLogger(DataverseServiceImpl.class);
     private final DataverseClient dataverseClient;
     private final VersionComparator versionComparator = new VersionComparator();
 
-    public DataverseServiceImpl(DataverseClient dataverseClient) {
+    private final VaultMetadataKey vaultMetadataKey;
+    
+    public DataverseServiceImpl(DataverseClient dataverseClient, VaultMetadataKey vaultMetadataKey) {
         this.dataverseClient = dataverseClient;
+        this.vaultMetadataKey = vaultMetadataKey;
     }
 
     @Override
@@ -75,6 +81,10 @@ public class DataverseServiceImpl implements DataverseService {
 
     @Override
     public void editMetadata(StepInvocation stepInvocation, FieldList fieldList) throws DataverseException, IOException {
+        // TODO pass those system metadata keys if we have them
+        if (vaultMetadataKey != null) { // yes, old style code
+            log.info("VaultMetadataKey (name, value): {}, {}", vaultMetadataKey.getName(), vaultMetadataKey.getValue());
+        }
         getDataset(stepInvocation).editMetadata(fieldList, true);
     }
 

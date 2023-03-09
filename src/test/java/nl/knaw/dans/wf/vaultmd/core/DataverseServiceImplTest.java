@@ -29,7 +29,7 @@ class DataverseServiceImplTest {
 
     @Test
     void getAllReleasedOrDeaccessionedVersion_should_return_versions_in_descending_order() throws Exception {
-        var service = Mockito.spy(new DataverseServiceImpl(Mockito.mock(DataverseClient.class)));
+        var service = Mockito.spy(new DataverseServiceImpl(Mockito.mock(DataverseClient.class),Mockito.mock(VaultMetadataKey.class)));
         var step = new StepInvocation("invocationId", "globalId", "datasetId", "1", "5");
 
         var version1 = TestUtilities.createDatasetVersion("bagId1", "nbn", 1, 1, "RELEASED");

@@ -45,5 +45,4 @@ dataverse:
   baseUrl: "http://localhost:8080/"
 
 vaultMetadataKey:
-  name: dansDataVaultMetadata
-  value: somevalue
+  value: somesecret

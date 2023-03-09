@@ -38,6 +38,7 @@ public class DdVaultMetadataConfigurationTest {
         var config = factory.build(new ResourceConfigurationSourceProvider(), "unit-test-config.yml");
         //assertEquals("http://localhost:8080/", config.getDataverse().getBaseUrl().toString());
         var mdKey = config.getVaultMetadataKey().build();
-        assertEquals("somevalue", mdKey.getValue());
+        //var params = mdKey.getQueryParams();
+        assertEquals("somesecret", mdKey.getValue());
     }
 }

@@ -18,15 +18,19 @@ package nl.knaw.dans.wf.vaultmd.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Map;
+
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+
 public class VaultMetadataKey {
     private static final Logger log = LoggerFactory.getLogger(VaultMetadataKey.class);
-    private final String name; // name of the 'system' metadata block protected by the key
-    private final String value; // secret key for the metadata block
-
-    // the name should be dansDataVaultMetadata, should we force it or make it default?
+    private static final String name = "dansDataVaultMetadata";
+    private static final String paramNamePrefix = "mdkey.";
+    private final String value;
     
-    public VaultMetadataKey(String name, String value) {
-        this.name = name;
+    public VaultMetadataKey(String value) {
         this.value = value;
     }
 
@@ -38,5 +42,8 @@ public class VaultMetadataKey {
         return value;
     }
     
-    // TODO getParam utility for that HTTP request stuff; prefixes name with 'mdkey.'
+    // construct HTTP request query parameter
+    public Map<String, List<String>> getQueryParams() {
+        return singletonMap(paramNamePrefix + getName(), singletonList(getValue()));
+    }
 }

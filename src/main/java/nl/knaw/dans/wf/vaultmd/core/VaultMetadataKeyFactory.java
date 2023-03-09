@@ -20,23 +20,14 @@ import org.slf4j.LoggerFactory;
 
 public class VaultMetadataKeyFactory {
     private static final Logger log = LoggerFactory.getLogger(VaultMetadataKeyFactory.class);
-    private String name; 
     private String value;
 
     public VaultMetadataKeyFactory() {
     }
     
     public VaultMetadataKey build() {
-        log.info("VaultMetadataKey (name, value): {}, {}", name, value);
-        return new VaultMetadataKey(name, value);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        log.info("VaultMetadataKey value: {}", value);
+        return new VaultMetadataKey(value);
     }
 
     public String getValue() {

@@ -18,20 +18,22 @@ package nl.knaw.dans.wf.vaultmd.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 public class VaultMetadataKey {
     private static final Logger log = LoggerFactory.getLogger(VaultMetadataKey.class);
-    private static final String name = "dansDataVaultMetadata";
+    private static final String name = "dansDataVaultMetadata"; // the name of the metadata block
     private static final String paramNamePrefix = "mdkey.";
     private final String value;
+    private final Boolean enabled; // indicate it is enabled (use the key) or not
     
-    public VaultMetadataKey(String value) {
+    public VaultMetadataKey(String value, Boolean enabled) {
         this.value = value;
+        this.enabled = enabled;
     }
 
     public String getName() {
@@ -41,9 +43,11 @@ public class VaultMetadataKey {
     public String getValue() {
         return value;
     }
-    
-    // construct HTTP request query parameter
-    public Map<String, List<String>> getQueryParams() {
-        return singletonMap(paramNamePrefix + getName(), singletonList(getValue()));
+
+    public Boolean isEnabled() { return enabled; }
+
+    public HashMap<String, List<String>> getQueryParams() {
+        // construct HTTP request query parameter
+        return new HashMap<String, List<String>>(singletonMap(paramNamePrefix + getName(), singletonList(getValue())));
     }
 }

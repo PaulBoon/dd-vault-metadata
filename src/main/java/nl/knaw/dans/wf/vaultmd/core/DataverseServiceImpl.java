@@ -28,9 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DataverseServiceImpl implements DataverseService {
@@ -81,11 +79,13 @@ public class DataverseServiceImpl implements DataverseService {
 
     @Override
     public void editMetadata(StepInvocation stepInvocation, FieldList fieldList) throws DataverseException, IOException {
-        // TODO pass those system metadata keys if we have them
-        if (vaultMetadataKey != null) { // yes, old style code
-            log.info("VaultMetadataKey (name, value): {}, {}", vaultMetadataKey.getName(), vaultMetadataKey.getValue());
+        if (vaultMetadataKey.isEnabled()) {
+            log.info("Using the VaultMetadataKey (name, value): {}, {}", vaultMetadataKey.getName(), vaultMetadataKey.getValue());
+            getDataset(stepInvocation).editMetadata(fieldList, true, vaultMetadataKey.getQueryParams());
+        } else {
+            log.info("Not using the VaultMetadataKey");
+            getDataset(stepInvocation).editMetadata(fieldList, true);
         }
-        getDataset(stepInvocation).editMetadata(fieldList, true);
     }
 
     DatasetApi getDataset(StepInvocation stepInvocation) {

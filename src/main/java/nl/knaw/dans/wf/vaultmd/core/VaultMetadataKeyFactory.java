@@ -21,13 +21,16 @@ import org.slf4j.LoggerFactory;
 public class VaultMetadataKeyFactory {
     private static final Logger log = LoggerFactory.getLogger(VaultMetadataKeyFactory.class);
     private String value;
+    private Boolean enabled;
 
     public VaultMetadataKeyFactory() {
     }
     
     public VaultMetadataKey build() {
-        log.info("VaultMetadataKey value: {}", value);
-        return new VaultMetadataKey(value);
+        log.info("VaultMetadataKey value: {}, enabled: {}", value, enabled);
+        
+        // TODO might check (enabled && !value.isBlank()) 
+        return new VaultMetadataKey(value, enabled);
     }
 
     public String getValue() {
@@ -36,5 +39,13 @@ public class VaultMetadataKeyFactory {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 }

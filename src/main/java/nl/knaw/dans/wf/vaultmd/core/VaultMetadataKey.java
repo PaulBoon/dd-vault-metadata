@@ -27,7 +27,6 @@ import static java.util.Collections.singletonMap;
 public class VaultMetadataKey {
     private static final Logger log = LoggerFactory.getLogger(VaultMetadataKey.class);
     private static final String name = "dansDataVaultMetadata"; // the name of the metadata block
-    private static final String paramNamePrefix = "mdkey.";
     private final String value;
     private final Boolean enabled; // indicate it is enabled (use the key) or not
     
@@ -46,8 +45,7 @@ public class VaultMetadataKey {
 
     public Boolean isEnabled() { return enabled; }
 
-    public HashMap<String, List<String>> getQueryParams() {
-        // construct HTTP request query parameter
-        return new HashMap<String, List<String>>(singletonMap(paramNamePrefix + getName(), singletonList(getValue())));
+    public HashMap<String, String> getKeyMap() {
+        return new HashMap<String, String>(singletonMap(getName(), getValue()));
     }
 }

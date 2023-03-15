@@ -80,10 +80,10 @@ public class DataverseServiceImpl implements DataverseService {
     @Override
     public void editMetadata(StepInvocation stepInvocation, FieldList fieldList) throws DataverseException, IOException {
         if (vaultMetadataKey.isEnabled()) {
-            log.info("Using the VaultMetadataKey (name, value): {}, {}", vaultMetadataKey.getName(), vaultMetadataKey.getValue());
-            getDataset(stepInvocation).editMetadata(fieldList, true, vaultMetadataKey.getQueryParams());
+            log.debug("Using the VaultMetadataKey (name, value): {}, {}", vaultMetadataKey.getName(), vaultMetadataKey.getValue());
+            getDataset(stepInvocation).editMetadata(fieldList, true, vaultMetadataKey.getKeyMap());
         } else {
-            log.info("Not using the VaultMetadataKey");
+            log.debug("Not using the VaultMetadataKey");
             getDataset(stepInvocation).editMetadata(fieldList, true);
         }
     }

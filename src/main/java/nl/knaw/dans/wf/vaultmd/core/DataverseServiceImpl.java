@@ -31,14 +31,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonMap;
+
 public class DataverseServiceImpl implements DataverseService {
     private static final Logger log = LoggerFactory.getLogger(DataverseServiceImpl.class);
     private final DataverseClient dataverseClient;
     private final VersionComparator versionComparator = new VersionComparator();
-
-    private final VaultMetadataKey vaultMetadataKey;
+    private static final String MDKEY_NAME = "dansDataVaultMetadata"; // the name of the metadata block
+    private final String vaultMetadataKey;
     
-    public DataverseServiceImpl(DataverseClient dataverseClient, VaultMetadataKey vaultMetadataKey) {
+    public DataverseServiceImpl(DataverseClient dataverseClient, String vaultMetadataKey) {
         this.dataverseClient = dataverseClient;
         this.vaultMetadataKey = vaultMetadataKey;
     }
@@ -79,9 +81,10 @@ public class DataverseServiceImpl implements DataverseService {
 
     @Override
     public void editMetadata(StepInvocation stepInvocation, FieldList fieldList) throws DataverseException, IOException {
-        if (vaultMetadataKey.isEnabled()) {
-            log.debug("Using the VaultMetadataKey (name, value): {}, {}", vaultMetadataKey.getName(), vaultMetadataKey.getValue());
-            getDataset(stepInvocation).editMetadata(fieldList, true, vaultMetadataKey.getKeyMap());
+        if (vaultMetadataKey != null && !vaultMetadataKey.isBlank()) {
+            log.debug("Using the VaultMetadataKey (name, value): {}, {}", MDKEY_NAME, vaultMetadataKey);
+            var keyMap = new HashMap<String, String>(singletonMap(MDKEY_NAME, vaultMetadataKey));
+            getDataset(stepInvocation).editMetadata(fieldList, true, keyMap);
         } else {
             log.debug("Not using the VaultMetadataKey");
             getDataset(stepInvocation).editMetadata(fieldList, true);

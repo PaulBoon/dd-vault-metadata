@@ -52,8 +52,7 @@ public class DdVaultMetadataConfigurationTest {
     public void canReadVaultMetadataKey() throws IOException, ConfigurationException {
         var config = factory.build(new ResourceConfigurationSourceProvider(), "unit-test-config.yml");
         //assertEquals("http://localhost:8080/", config.getDataverse().getBaseUrl().toString());
-        var mdKey = config.getVaultMetadataKey().build();
-        //var params = mdKey.getQueryParams();
-        assertEquals("somesecret", mdKey.getValue());
+        var mdKey = config.getVaultMetadataKey();
+        assertEquals("somesecret", mdKey);
     }
 }

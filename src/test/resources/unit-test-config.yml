@@ -44,6 +44,4 @@ taskQueue:
 dataverse:
   baseUrl: "http://localhost:8080/"
 
-vaultMetadataKey:
-  enabled: true
-  value: somesecret
+vaultMetadataKey: somesecret

@@ -18,7 +18,6 @@ package nl.knaw.dans.wf.vaultmd;
 import io.dropwizard.Configuration;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
-import nl.knaw.dans.wf.vaultmd.core.VaultMetadataKeyFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -34,8 +33,7 @@ public class DdVaultMetadataConfiguration extends Configuration {
     private DataverseClientFactory dataverse;
 
     @Valid
-    @NotNull
-    private VaultMetadataKeyFactory vaultMetadataKey;
+    private String vaultMetadataKey;
     
     public void setTaskQueue(ExecutorServiceFactory taskExecutorThreadPool) {
         this.taskQueue = taskExecutorThreadPool;
@@ -53,11 +51,11 @@ public class DdVaultMetadataConfiguration extends Configuration {
         this.dataverse = dataverse;
     }
 
-    public VaultMetadataKeyFactory getVaultMetadataKey() {
+    public String getVaultMetadataKey() {
         return vaultMetadataKey;
     }
 
-    public void setVaultMetadataKey(VaultMetadataKeyFactory vaultMetadataKey) {
+    public void setVaultMetadataKey(String vaultMetadataKey) {
         this.vaultMetadataKey = vaultMetadataKey;
     }
 }

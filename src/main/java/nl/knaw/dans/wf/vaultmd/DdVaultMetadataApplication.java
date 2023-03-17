@@ -47,7 +47,7 @@ public class DdVaultMetadataApplication extends Application<DdVaultMetadataConfi
     @Override
     public void run(final DdVaultMetadataConfiguration configuration, final Environment environment) {
         final var dv = configuration.getDataverse().build();
-        final var mdkey = configuration.getVaultMetadataKey().build();
+        final var mdkey = configuration.getVaultMetadataKey();
         final var dataverseService = new DataverseServiceImpl(dv, mdkey);
         final var idValidator = new IdValidatorImpl();
         final var idMintingService = new IdMintingServiceImpl();

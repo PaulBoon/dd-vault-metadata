@@ -32,6 +32,9 @@ public class DdVaultMetadataConfiguration extends Configuration {
     @NotNull
     private DataverseClientFactory dataverse;
 
+    @Valid
+    private String vaultMetadataKey;
+    
     public void setTaskQueue(ExecutorServiceFactory taskExecutorThreadPool) {
         this.taskQueue = taskExecutorThreadPool;
     }
@@ -46,5 +49,13 @@ public class DdVaultMetadataConfiguration extends Configuration {
 
     public void setDataverse(DataverseClientFactory dataverse) {
         this.dataverse = dataverse;
+    }
+
+    public String getVaultMetadataKey() {
+        return vaultMetadataKey;
+    }
+
+    public void setVaultMetadataKey(String vaultMetadataKey) {
+        this.vaultMetadataKey = vaultMetadataKey;
     }
 }

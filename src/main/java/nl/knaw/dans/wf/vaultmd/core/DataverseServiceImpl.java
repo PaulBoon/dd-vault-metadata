@@ -24,19 +24,25 @@ import nl.knaw.dans.lib.dataverse.model.dataset.FieldList;
 import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
 import org.apache.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonMap;
+
 public class DataverseServiceImpl implements DataverseService {
+    private static final Logger log = LoggerFactory.getLogger(DataverseServiceImpl.class);
     private final DataverseClient dataverseClient;
     private final VersionComparator versionComparator = new VersionComparator();
-
-    public DataverseServiceImpl(DataverseClient dataverseClient) {
+    private static final String MDKEY_NAME = "dansDataVaultMetadata"; // the name of the metadata block
+    private final String vaultMetadataKey;
+    
+    public DataverseServiceImpl(DataverseClient dataverseClient, String vaultMetadataKey) {
         this.dataverseClient = dataverseClient;
+        this.vaultMetadataKey = vaultMetadataKey;
     }
 
     @Override
@@ -75,7 +81,14 @@ public class DataverseServiceImpl implements DataverseService {
 
     @Override
     public void editMetadata(StepInvocation stepInvocation, FieldList fieldList) throws DataverseException, IOException {
-        getDataset(stepInvocation).editMetadata(fieldList, true);
+        if (vaultMetadataKey != null && !vaultMetadataKey.isBlank()) {
+            log.debug("Using the VaultMetadataKey (name, value): {}, {}", MDKEY_NAME, vaultMetadataKey);
+            var keyMap = new HashMap<String, String>(singletonMap(MDKEY_NAME, vaultMetadataKey));
+            getDataset(stepInvocation).editMetadata(fieldList, true, keyMap);
+        } else {
+            log.debug("Not using the VaultMetadataKey");
+            getDataset(stepInvocation).editMetadata(fieldList, true);
+        }
     }
 
     DatasetApi getDataset(StepInvocation stepInvocation) {

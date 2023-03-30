@@ -43,15 +43,9 @@ public class DdVaultMetadataConfigurationTest {
         factory.build(FileInputStream::new, "src/main/assembly/dist/cfg/config.yml");
     }
 
-//    @Test
-//    public void canReadTest() throws IOException, ConfigurationException {
-//        factory.build(new ResourceConfigurationSourceProvider(), "debug-etc/config.yml");
-//    }
-
     @Test
     public void canReadVaultMetadataKey() throws IOException, ConfigurationException {
         var config = factory.build(new ResourceConfigurationSourceProvider(), "unit-test-config.yml");
-        //assertEquals("http://localhost:8080/", config.getDataverse().getBaseUrl().toString());
         var mdKey = config.getVaultMetadataKey();
         assertEquals("somesecret", mdKey);
     }

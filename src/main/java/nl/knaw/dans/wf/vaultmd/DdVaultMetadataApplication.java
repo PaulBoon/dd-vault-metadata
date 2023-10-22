@@ -16,9 +16,9 @@
 package nl.knaw.dans.wf.vaultmd;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import io.dropwizard.Application;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
+import io.dropwizard.core.Application;
+import io.dropwizard.core.setup.Bootstrap;
+import io.dropwizard.core.setup.Environment;
 import nl.knaw.dans.wf.vaultmd.core.DataverseServiceImpl;
 import nl.knaw.dans.wf.vaultmd.core.IdMintingServiceImpl;
 import nl.knaw.dans.wf.vaultmd.core.IdValidatorImpl;

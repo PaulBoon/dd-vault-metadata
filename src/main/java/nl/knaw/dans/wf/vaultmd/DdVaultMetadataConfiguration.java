@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.wf.vaultmd;
 
-import io.dropwizard.Configuration;
+import io.dropwizard.core.Configuration;
 import nl.knaw.dans.lib.util.DataverseClientFactory;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 

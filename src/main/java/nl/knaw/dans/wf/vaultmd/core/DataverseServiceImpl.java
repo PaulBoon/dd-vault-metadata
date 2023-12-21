@@ -23,7 +23,7 @@ import nl.knaw.dans.lib.dataverse.model.dataset.DatasetVersion;
 import nl.knaw.dans.lib.dataverse.model.dataset.FieldList;
 import nl.knaw.dans.lib.dataverse.model.workflow.ResumeMessage;
 import nl.knaw.dans.wf.vaultmd.api.StepInvocation;
-import org.apache.http.HttpStatus;
+import org.apache.hc.core5.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

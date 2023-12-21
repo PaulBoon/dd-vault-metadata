@@ -265,7 +265,7 @@ public class SetVaultMetadataTask implements Runnable {
             catch (DataverseException e) {
                 log.warn("Unable to resume workflow due to Dataverse error", e);
 
-                if (e.getHttpResponse().getStatusLine().getStatusCode() == 404) {
+                if (e.getStatus() == 404) {
                     // retrying
                     log.debug("Sleeping {} ms before next try", RETRY_DELAY_MS);
                     Thread.sleep(RETRY_DELAY_MS);

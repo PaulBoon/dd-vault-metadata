@@ -22,6 +22,8 @@ logging:
       currentLogFilename: /var/opt/dans.knaw.nl/log/dd-vault-metadata/dd-vault-metadata.log
       type: file
       timeZone: system
+  loggers:
+    'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
 
 #
 # Configures the threads on which the vault metadata setting actions are executed.

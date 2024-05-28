@@ -6,12 +6,11 @@
 
 logging:
   level: INFO
-  loggers:
-    "dans.knaw.nl":
-      level: DEBUG
-      additive: false
   appenders:
     - type: console
     - type: file
       archive: false
       currentLogFilename: data/dd-vault-metadata.log
+  loggers:
+    'nl.knaw.dans': DEBUG
+    'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
